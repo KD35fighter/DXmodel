@@ -122,6 +122,25 @@ class dxitv{
 
     }
 
+    /*
+     * 发送特权码短信
+     * */
+    public function sendSpecialMsg($mobile){
+        $arr = [];
+        $arr['itvAccount'] = 'xuetang';
+        $arr['timestamp'] = round(microtime(1),3) * 1000;
+        $arr['appId'] = 'xuetang';
+        $arr['accountType'] = 1;
+        $arr['account'] = $mobile;
+        $arr['deductId'] = '84';
+        $paramarr = $this->ASCIIarr($arr);
+
+        $sign = md5($paramarr[1].'53b12f17f72417f5125b6d2e0e2eda11');
+        $url = 'http://61.191.32.26:1190/itv-open/api/tvcode_grant?'.$paramarr[0].'&sign='.$sign;
+        $res = json_decode($this->httpGet($url),1);
+        return $res;
+    }
+
 
 
     protected function httpGet($url) {
@@ -190,6 +209,27 @@ class dxitv{
         return '参数错误';
     }
 
+    protected function ASCIIarr($params = array()){
+        //echo '&amptimes';die;
+        if(!empty($params)){
+            $p =  ksort($params);
+            if($p){
+                $str1 = '';
+                $str2 = '';
+                foreach ($params as $k=>$val){
+                    $str1 .= $k .'=' . $val . '&';
+                }
+                foreach ($params as $k=>$val){
+                    $str2 .= $k .'='. $val;
+                }
+                $str1 = rtrim($str1, '&');
+                return [$str1,$str2];
+            }
+        }
+        return '参数错误';
+    }
+
+
     //随机生成32字符串
     protected function createNonceStr($length = 32) {
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -198,6 +238,19 @@ class dxitv{
             $str .= substr($chars, mt_rand(0, strlen($chars) - 1), 1);
         }
         return $str;
+    }
+
+    //3des加密
+    protected function tripleDES($data){
+        //3des算法
+
+        $desarr = [];
+        $desarr['data'] = $data;
+        $desarr['secretKey'] = 'b8e507cef6a940d7b84a05d6ad95ce8c';
+        $desurl = 'http://120.55.88.238:9372/encrypt';
+
+        $desres = json_decode($this->http_post_header($desurl,$desarr,['content-type:application/octet-stream']),1);
+        return $desres;
     }
 
     //判断是否为安徽电信手机号加密
